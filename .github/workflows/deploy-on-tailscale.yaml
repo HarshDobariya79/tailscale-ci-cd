@@ -1,0 +1,32 @@
+name: Deploy on tailscale server
+on:
+  push:
+    branches:
+      - main
+env:
+  TS_SSH_USERNAME: ${{ secrets.TS_SSH_USERNAME }}
+  TS_INSTANCE_IP: ${{ secrets.TS_INSTANCE_IP_STAGING }}
+  TS_SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
+  IMAGE_TAG: ${{ github.sha }}
+  
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - name: Tailscale
+        uses: tailscale/github-action@v2
+        with:
+            oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+            oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+            tags: tag:ci
+      - name: multiple command
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.TS_INSTANCE_IP }}
+          username: ${{ secrets.TS_SSH_USERNAME }}
+          key: ${{ secrets.TS_SSH_PRIVATE_KEY }}
+          script: |
+            whoami
+            ls -al
